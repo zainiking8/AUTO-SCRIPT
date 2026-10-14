@@ -45,6 +45,12 @@ services and ports:
   commented out, so the usual `sed` edits were silently ignored and dropbear
   stayed on port 22 (clashing with OpenSSH). The installer now appends the real
   values, giving **143 / 109 / 110 / 69 / 50000** on all three releases.
+- **netcat** — `netcat` no longer exists on 24.04, which made the whole
+  `apt install` line in `xray/ins-xray.sh` fail. `netcat-openbsd` is used
+  instead (it is what `netcat` pointed at on 20.04/22.04 anyway).
+- **resolvconf** — removed on 24.04 (systemd-resolved replaces it), which made
+  the whole `apt install` line in `helium/helium.sh` fail. It is now installed
+  only where the release still ships it.
 <br>
 Package availability is probed with `apt-cache policy` (a missing package
 reports `Candidate: (none)`), never with `apt-cache show`, which exits 0 even

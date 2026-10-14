@@ -13,6 +13,11 @@ dnsmasqHostFinalList="/etc/dnsmasq/adblock.hosts"
 tempHostsList="/etc/dnsmasq/list.tmp"
 publicIP=$(ip -4 addr | sed -ne 's|^.* inet \([^/]*\)/.* scope global.*$|\1|p' | awk '{print $1}' | head -1)
 
+# Ubuntu 20/22/24 compat: resolvconf was removed in 24.04 (systemd-resolved
+# replaces it). `apt-cache policy` reports "Candidate: (none)" for a missing
+# package, unlike `apt-cache show` which always exits 0.
+_pkg_available() { apt-cache policy "$1" 2>/dev/null | grep -q "Candidate: [0-9]"; }
+
 function header() {
 	echo -e $GREEN" $VERSIONNAME$VERSIONNUMBER" $NOCOLOR
 	echo -e $WHITE" by ZAINU X BRAND" $NOCOLOR
@@ -63,7 +68,11 @@ function install() {
 		unlink /etc/resolv.conf
 		echo "nameserver 1.1.1.1" >/etc/resolv.conf
 	fi
-	apt update && apt install -y dnsmasq dnsutils vnstat resolvconf bc
+	# resolvconf only exists on 20.04/22.04; one missing name makes apt
+	# refuse the whole line, so detect it first (Ubuntu 24.04 compat)
+	RESOLVCONF=""
+	_pkg_available resolvconf && RESOLVCONF="resolvconf"
+	apt update && apt install -y dnsmasq dnsutils vnstat bc $RESOLVCONF
 	systemctl enable dnsmasq
 	mv /etc/dnsmasq.conf /etc/dnsmasq.conf.bak
 	rm -rf /etc/dnsmasq.conf
@@ -78,7 +87,7 @@ function install() {
 	echo -e "0 4 * * * root helium_daily # Helium by Abi Darwish" >>/etc/crontab
 	updateEngine
 	echo "nameserver 127.0.0.1" >/etc/resolv.conf
-	>/etc/resolvconf/resolv.conf.d/head
+	mkdir -p /etc/resolvconf/resolv.conf.d && >/etc/resolvconf/resolv.conf.d/head
         sleep 1
         clear
         header
@@ -280,7 +289,9 @@ function reinstall() {
 	[[ ! -e /etc/dnsmasq ]] && mkdir -p /etc/dnsmasq
 	echo "nameserver 1.1.1.1" >/etc/resolv.conf
 	echo
-	apt update && apt install -y dnsmasq dnsutils vnstat resolvconf
+	RESOLVCONF=""
+	_pkg_available resolvconf && RESOLVCONF="resolvconf"
+	apt update && apt install -y dnsmasq dnsutils vnstat $RESOLVCONF
 	systemctl enable dnsmasq >/dev/null 2>&1
 	rm -rf /etc/dnsmasq.conf
 	wget -q -O /etc/dnsmasq.conf "https://raw.githubusercontent.com/abidarwish/helium/main/dnsmasq.conf"
@@ -294,7 +305,7 @@ function reinstall() {
 	echo -e "0 4 * * * root helium_daily # Helium by Abi Darwish" >>/etc/crontab
 	updateEngine
 	echo "nameserver 127.0.0.1" >/etc/resolv.conf
-	>/etc/resolvconf/resolv.conf.d/head
+	mkdir -p /etc/resolvconf/resolv.conf.d && >/etc/resolvconf/resolv.conf.d/head
 	sleep 1
         clear
         header
@@ -321,7 +332,7 @@ function uninstall() {
 	rm -rf /etc/dnsmasq
 	rm -rf /usr/local/sbin/helium_daily
 	sed -i '/helium_daily/d' /etc/crontab
-	>/etc/resolvconf/resolv.conf.d/head
+	mkdir -p /etc/resolvconf/resolv.conf.d && >/etc/resolvconf/resolv.conf.d/head
 	#mv /etc/resolv.conf.bak /etc/resolv.conf
         echo -e "nameserver 1.1.1.1" >/etc/resolv.conf
 	sleep 2
