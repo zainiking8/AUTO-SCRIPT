@@ -182,18 +182,18 @@ rm /etc/nginx/conf.d/vps.conf
 wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/ssh/vps.conf"
 systemctl restart nginx 2>/dev/null || service nginx restart 2>/dev/null || true
 
-mkdir /etc/systemd/system/nginx.service.d
+mkdir -p /etc/systemd/system/nginx.service.d
 printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
 rm /etc/nginx/conf.d/default.conf
 systemctl daemon-reload
 service nginx restart
 cd
-mkdir /home/vps
-mkdir /home/vps/public_html
+mkdir -p /home/vps
+mkdir -p /home/vps/public_html
 wget -O /home/vps/public_html/index.html "https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/ssh/index"
 wget -O /home/vps/public_html/.htaccess "https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/ssh/.htaccess"
-mkdir /home/vps/public_html/ss-ws
-mkdir /home/vps/public_html/clash-ws
+mkdir -p /home/vps/public_html/ss-ws
+mkdir -p /home/vps/public_html/clash-ws
 # install badvpn
 cd
 wget -O /usr/bin/badvpn-udpgw "https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/ssh/newudpgw"
