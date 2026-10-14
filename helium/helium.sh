@@ -87,7 +87,7 @@ function install() {
 	echo -e "0 4 * * * root helium_daily # Helium by Abi Darwish" >>/etc/crontab
 	updateEngine
 	echo "nameserver 127.0.0.1" >/etc/resolv.conf
-	mkdir -p /etc/resolvconf/resolv.conf.d && >/etc/resolvconf/resolv.conf.d/head
+	mkdir -p /etc/resolvconf/resolv.conf.d 2>/dev/null; : > /etc/resolvconf/resolv.conf.d/head 2>/dev/null || true
         sleep 1
         clear
         header
@@ -305,7 +305,7 @@ function reinstall() {
 	echo -e "0 4 * * * root helium_daily # Helium by Abi Darwish" >>/etc/crontab
 	updateEngine
 	echo "nameserver 127.0.0.1" >/etc/resolv.conf
-	mkdir -p /etc/resolvconf/resolv.conf.d && >/etc/resolvconf/resolv.conf.d/head
+	mkdir -p /etc/resolvconf/resolv.conf.d 2>/dev/null; : > /etc/resolvconf/resolv.conf.d/head 2>/dev/null || true
 	sleep 1
         clear
         header
@@ -332,7 +332,7 @@ function uninstall() {
 	rm -rf /etc/dnsmasq
 	rm -rf /usr/local/sbin/helium_daily
 	sed -i '/helium_daily/d' /etc/crontab
-	mkdir -p /etc/resolvconf/resolv.conf.d && >/etc/resolvconf/resolv.conf.d/head
+	mkdir -p /etc/resolvconf/resolv.conf.d 2>/dev/null; : > /etc/resolvconf/resolv.conf.d/head 2>/dev/null || true
 	#mv /etc/resolv.conf.bak /etc/resolv.conf
         echo -e "nameserver 1.1.1.1" >/etc/resolv.conf
 	sleep 2
