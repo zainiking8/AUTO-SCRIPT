@@ -50,8 +50,9 @@ CITY=$( curl -s ipinfo.io/city?token=ce3da57536810d )
 # CHEK STATUS (systemctl is-active works on 20/22/24; returns 'active' or 'inactive')
 #   Original used 'systemctl status | grep Active | awk | cut' which yields 'running'
 #   but /etc/init.d/X status fails on 22/24 -> showed "Not Running" for everything
-#   Fix: use is-active directly, normalize 'active'/'running' -> 'active'
-_status_norm() { case "$1" in active|running) echo active ;; *) echo inactive ;; esac; }
+#   Fix: use is-active directly, normalize 'active' -> 'running' to match the
+#   original comparisons (== "running") below.
+_status_norm() { case "$1" in active|running) echo running ;; *) echo stopped ;; esac; }
 tls_v2ray_status=$(_status_norm "$(systemctl is-active xray 2>/dev/null)")
 nontls_v2ray_status=$(_status_norm "$(systemctl is-active xray 2>/dev/null)")
 vless_tls_v2ray_status=$(_status_norm "$(systemctl is-active xray 2>/dev/null)")
