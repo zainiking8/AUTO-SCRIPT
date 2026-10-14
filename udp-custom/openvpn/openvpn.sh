@@ -22,7 +22,7 @@ sed -i $MYIP2 /etc/squid/squid.conf
 # // OpenVPN
 sleep 1
 echo "\e[1;32m Proses Download OpenVPN.. \e[0m"
-wget https://raw.githubusercontent.com/NETWORKTWEAKER/AUTO-SCRIPT/master/udp-custom/openvpn/vpn.sh &&  chmod +x vpn.sh && ./vpn.sh
+wget https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/udp-custom/openvpn/vpn.sh &&  chmod +x vpn.sh && ./vpn.sh
 
 cd
 chown -R www-data:www-data /home/vps/public_html

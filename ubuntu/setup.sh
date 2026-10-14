@@ -207,7 +207,7 @@ if [ ! -f "/etc/log-create-shadowsocks.log" ]; then
 echo "Log Shadowsocks Account " > /etc/log-create-shadowsocks.log
 fi
 history -c
-serverV=$( curl -sS https://raw.githubusercontent.com/NETWORKTWEAKER/AUTO-SCRIPT/master/menu/versi  )
+serverV=$( curl -sS https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/menu/versi  )
 echo $serverV > /opt/.ver
 aureb=$(cat /home/re_otm)
 if [ "${aureb:-0}" -ge 12 ]; then
