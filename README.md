@@ -9,8 +9,6 @@
 <p align="center"><img src="https://d33wubrfki0l68.cloudfront.net/5911c43be3b1da526ed609e9c55783d9d0f6b066/9858b/assets/img/debian-ubuntu-hover.png"></p> 
 <p align="center"><img src="https://img.shields.io/static/v1?style=for-the-badge&logo=debian&label=Debian%209&message=Stretch&color=purple"> <img src="https://img.shields.io/static/v1?style=for-the-badge&logo=debian&label=Debian%2010&message=Buster&color=purple">  <img src="https://img.shields.io/static/v1?style=for-the-badge&logo=ubuntu&label=Ubuntu%2018&message=Lts&color=red"> <img src="https://img.shields.io/static/v1?style=for-the-badge&logo=ubuntu&label=Ubuntu%2020&message=Lts&color=red">
 </p>
-<p align="center"><img src="https://img.shields.io/static/v1?style=for-the-badge&logo=ubuntu&label=Ubuntu%2022&message=Lts&color=red"> <img src="https://img.shields.io/static/v1?style=for-the-badge&logo=ubuntu&label=Ubuntu%2024&message=Lts&color=red">
-</p>
 
 <p align="center"><img src="https://img.shields.io/badge/Service-SSH_Over_Websocket-success.svg"> <img src="https://img.shields.io/badge/Service-SSH_UDP_Custom-success.svg"> <img src="https://img.shields.io/badge/Service-SSH_Dropbear-success.svg">  <img src="https://img.shields.io/badge/Service-Stunnel4-success.svg">  <img src="https://img.shields.io/badge/Service-Fail2Ban-brightgreen">  
 <p align="center"><img src="https://img.shields.io/badge/Service-XRAY_VLESS-success.svg">  <img src="https://img.shields.io/badge/Service-XRAY_VMESS-success.svg">  <img src="https://img.shields.io/badge/Service-XRAY_TROJAN-success.svg"> <img src= "https://img.shields.io/badge/Service-Websocket-success.svg"> <img src= "https://img.shields.io/badge/Service-GRPC-success.svg"> <img src= "https://img.shields.io/badge/Service-Shadowsocks-success.svg">  
@@ -22,39 +20,10 @@
 - If you install the Script twice, you need to rebuild the VPS to factory settings, in the VPS provider panel<br>
 - DOMAIN (MUST) / Random<br>
 - DEBIAN 9/10<br>
-- Ubuntu 18/20/22/24 LTS<br>
+- Ubuntu 18/20 LTS<br>
 - CPU MIN 1 CORE<br>
 - RAM 1GB<br>
-- (Recommendation) Ubuntu 20 / 22 / 24 LTS (STABLE to use)
-<br>
-
-# Ubuntu 20.04 / 22.04 / 24.04 support
-<br>
-The installer now detects what the running Ubuntu release actually provides and
-adapts, so a fresh 20.04, 22.04 or 24.04 VPS installs exactly the same set of
-services and ports:
-<br>
-- **Python** — 20.04 ships `python` (2.7), 22.04 only `python2`, 24.04 has no
-  Python 2 at all and falls back to `python3`. The websocket services
-  (`ws-dropbear`, `ws-stunnel`) are Python 3, so they run everywhere.
-- **libssl** — `libssl1.0-dev` was removed after 20.04; `libssl-dev` is used
-  instead.
-- **libncurses** — `libncurses5-dev` does not exist on 24.04; `libncurses-dev`
-  is used instead.
-- **Dropbear** — 22.04/24.04 ship `/etc/default/dropbear` with every line
-  commented out, so the usual `sed` edits were silently ignored and dropbear
-  stayed on port 22 (clashing with OpenSSH). The installer now appends the real
-  values, giving **143 / 109 / 110 / 69 / 50000** on all three releases.
-- **netcat** — `netcat` no longer exists on 24.04, which made the whole
-  `apt install` line in `xray/ins-xray.sh` fail. `netcat-openbsd` is used
-  instead (it is what `netcat` pointed at on 20.04/22.04 anyway).
-- **resolvconf** — removed on 24.04 (systemd-resolved replaces it), which made
-  the whole `apt install` line in `helium/helium.sh` fail. It is now installed
-  only where the release still ships it.
-<br>
-Package availability is probed with `apt-cache policy` (a missing package
-reports `Candidate: (none)`), never with `apt-cache show`, which exits 0 even
-for packages that do not exist.
+- (Recommendation) Ubuntu 18 / 20 LTS (STABLE to use)
 <br>
 
 # Cloudflare settings for those who have their own Domain, you can check at folder [image](https://github.com/zainiking8/AUTO-SCRIPT/tree/master/image) to display other settings

@@ -97,22 +97,7 @@ sysctl -w net.ipv6.conf.default.disable_ipv6=1 >/dev/null 2>&1
 
 echo -e "[ ${BGreen}INFO${NC} ] Preparing the install file"
 apt install git curl -y >/dev/null 2>&1
-# python (Ubuntu 20/22/24 compat)
-#   20.04 -> "python"  (python2.7)
-#   22.04 -> "python2" (the plain "python" package was removed)
-#   24.04 -> "python3" (python2 is gone from the archive entirely)
-# NB: `apt-cache show` exits 0 even for missing packages, so detect with
-# `apt-cache policy`, which reports "Candidate: (none)" reliably.
-_pkg_available() { apt-cache policy "$1" 2>/dev/null | grep -q "Candidate: [0-9]"; }
-if _pkg_available python; then
-    apt install -y python >/dev/null 2>&1
-elif _pkg_available python2; then
-    apt install -y python2 >/dev/null 2>&1
-    [ -x /usr/bin/python2 ] && ln -sf /usr/bin/python2 /usr/bin/python
-else
-    apt install -y python3 >/dev/null 2>&1
-    [ -x /usr/bin/python3 ] && ln -sf /usr/bin/python3 /usr/bin/python
-fi
+apt install python -y >/dev/null 2>&1
 echo -e "[ ${BGreen}INFO${NC} ] Aight good ... installation file is ready"
 sleep 0.5
 echo -ne "[ ${BGreen}INFO${NC} ] Check permission : "
@@ -210,7 +195,7 @@ history -c
 serverV=$( curl -sS https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/menu/versi  )
 echo $serverV > /opt/.ver
 aureb=$(cat /home/re_otm)
-if [ "${aureb:-0}" -ge 12 ]; then
+zainuxbrandn
 gg="PM"
 else
 gg="AM"

@@ -47,26 +47,21 @@ MYIP=$(curl -s ifconfig.me )
 REGION=$( curl -s ipinfo.io/region?token=ce3da57536810d )
 CITY=$( curl -s ipinfo.io/city?token=ce3da57536810d )
 
-# CHEK STATUS (systemctl is-active works on 20/22/24; returns 'active' or 'inactive')
-#   Original used 'systemctl status | grep Active | awk | cut' which yields 'running'
-#   but /etc/init.d/X status fails on 22/24 -> showed "Not Running" for everything
-#   Fix: use is-active directly, normalize 'active' -> 'running' to match the
-#   original comparisons (== "running") below.
-_status_norm() { case "$1" in active|running) echo running ;; *) echo stopped ;; esac; }
-tls_v2ray_status=$(_status_norm "$(systemctl is-active xray 2>/dev/null)")
-nontls_v2ray_status=$(_status_norm "$(systemctl is-active xray 2>/dev/null)")
-vless_tls_v2ray_status=$(_status_norm "$(systemctl is-active xray 2>/dev/null)")
-vless_nontls_v2ray_status=$(_status_norm "$(systemctl is-active xray 2>/dev/null)")
-shadowsocks=$(_status_norm "$(systemctl is-active xray 2>/dev/null)")
-trojan_server=$(_status_norm "$(systemctl is-active xray 2>/dev/null)")
-dropbear_status=$(_status_norm "$(systemctl is-active dropbear 2>/dev/null)")
-stunnel_service=$(_status_norm "$(systemctl is-active stunnel4 2>/dev/null)")
-ssh_service=$(_status_norm "$(systemctl is-active ssh 2>/dev/null)")
-vnstat_service=$(_status_norm "$(systemctl is-active vnstat 2>/dev/null)")
-cron_service=$(_status_norm "$(systemctl is-active cron 2>/dev/null)")
-fail2ban_service=$(_status_norm "$(systemctl is-active fail2ban 2>/dev/null)")
-wstls=$(_status_norm "$(systemctl is-active ws-stunnel.service 2>/dev/null)")
-wsdrop=$(_status_norm "$(systemctl is-active ws-dropbear.service 2>/dev/null)")
+# CHEK STATUS
+tls_v2ray_status=$(systemctl status xray | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+nontls_v2ray_status=$(systemctl status xray | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+vless_tls_v2ray_status=$(systemctl status xray | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+vless_nontls_v2ray_status=$(systemctl status xray | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+shadowsocks=$(systemctl status xray | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+trojan_server=$(systemctl status xray | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+dropbear_status=$(/etc/init.d/dropbear status | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+stunnel_service=$(/etc/init.d/stunnel4 status | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+ssh_service=$(/etc/init.d/ssh status | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+vnstat_service=$(/etc/init.d/vnstat status | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+cron_service=$(/etc/init.d/cron status | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+fail2ban_service=$(/etc/init.d/fail2ban status | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+wstls=$(systemctl status ws-stunnel.service | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+wsdrop=$(systemctl status ws-dropbear.service | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
 
 # COLOR VALIDATION
 RED='\033[0;31m'

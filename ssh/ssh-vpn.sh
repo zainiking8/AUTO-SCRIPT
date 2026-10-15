@@ -83,22 +83,7 @@ apt -y install wget curl
 #figlet
 apt-get install figlet -y
 apt-get install ruby -y
-# python (Ubuntu 20/22/24 compat)
-#   20.04 -> "python"  (python2.7)
-#   22.04 -> "python2" (the plain "python" package was removed)
-#   24.04 -> "python3" (python2 is gone from the archive entirely)
-# NB: do not test with `apt-cache show`, it exits 0 even when the package does
-# not exist. `apt-cache policy` reports "Candidate: (none)" reliably.
-_pkg_available() { apt-cache policy "$1" 2>/dev/null | grep -q "Candidate: [0-9]"; }
-if _pkg_available python; then
-    apt install -y python >/dev/null 2>&1
-elif _pkg_available python2; then
-    apt install -y python2 >/dev/null 2>&1
-    [ -x /usr/bin/python2 ] && ln -sf /usr/bin/python2 /usr/bin/python
-else
-    apt install -y python3 >/dev/null 2>&1
-    [ -x /usr/bin/python3 ] && ln -sf /usr/bin/python3 /usr/bin/python
-fi
+apt install python -y
 apt install make -y
 apt install cmake -y
 apt install coreutils -y
@@ -109,7 +94,7 @@ apt install unzip -y
 apt install nano -y
 apt install sed -y
 apt install gnupg -y
-apt install gnupg1 -y 2>/dev/null || apt install gnupg -y 2>/dev/null || true
+apt install gnupg1 -y
 apt install bc -y
 apt install jq -y
 apt install apt-transport-https -y
@@ -126,8 +111,7 @@ apt install g++ -y
 apt install libreadline-dev -y
 apt install zlib1g-dev -y
 apt install libssl-dev -y
-# libssl1.0-dev removed in 22.04+, use libssl-dev
-apt install libssl-dev -y 2>/dev/null || true
+apt install libssl1.0-dev -y
 apt install dos2unix -y
 gem install lolcat
 
@@ -177,23 +161,23 @@ apt -y install nginx
 cd
 rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
-wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/ssh/nginx.conf"
+wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT//master/ssh/nginx.conf"
 rm /etc/nginx/conf.d/vps.conf
 wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/ssh/vps.conf"
-systemctl restart nginx 2>/dev/null || service nginx restart 2>/dev/null || true
+/etc/init.d/nginx restart
 
-mkdir -p /etc/systemd/system/nginx.service.d
+mkdir /etc/systemd/system/nginx.service.d
 printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
 rm /etc/nginx/conf.d/default.conf
 systemctl daemon-reload
 service nginx restart
 cd
-mkdir -p /home/vps
-mkdir -p /home/vps/public_html
+mkdir /home/vps
+mkdir /home/vps/public_html
 wget -O /home/vps/public_html/index.html "https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/ssh/index"
 wget -O /home/vps/public_html/.htaccess "https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/ssh/.htaccess"
-mkdir -p /home/vps/public_html/ss-ws
-mkdir -p /home/vps/public_html/clash-ws
+mkdir /home/vps/public_html/ss-ws
+mkdir /home/vps/public_html/clash-ws
 # install badvpn
 cd
 wget -O /usr/bin/badvpn-udpgw "https://raw.githubusercontent.com/zainiking8/AUTO-SCRIPT/master/ssh/newudpgw"
@@ -220,26 +204,15 @@ screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7900 --max-clients 500
 # setting port ssh
 cd
 sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-# Ensure Port 22 exists (24.04 default has '#Port 22' commented)
-grep -qE '^\s*Port\s+22\s*$' /etc/ssh/sshd_config || echo 'Port 22' >> /etc/ssh/sshd_config
-# Add extra ports only if not already present (idempotent)
-for p in 500 40000 53 51443 58080 666 200; do
-    grep -qE "^\s*Port\s+${p}\s*$" /etc/ssh/sshd_config || echo "Port ${p}" >> /etc/ssh/sshd_config
-done
-# Validate sshd_config before restart — if broken, restore safe default
-if ! sshd -t 2>/dev/null; then
-    echo "[WARNING] sshd_config broken — restoring safe default"
-    cat > /etc/ssh/sshd_config <<'SSHSAFE'
-Port 22
-PermitRootLogin yes
-PasswordAuthentication yes
-PubkeyAuthentication yes
-UsePAM yes
-AcceptEnv LANG LC_*
-Subsystem sftp /usr/lib/openssh/sftp-server
-SSHSAFE
-fi
-systemctl restart ssh 2>/dev/null || service ssh restart 2>/dev/null || true
+sed -i '/Port 22/a Port 500' /etc/ssh/sshd_config
+sed -i '/Port 22/a Port 40000' /etc/ssh/sshd_config
+sed -i '/Port 22/a Port 53' /etc/ssh/sshd_config
+sed -i '/Port 22/a Port 51443' /etc/ssh/sshd_config
+sed -i '/Port 22/a Port 58080' /etc/ssh/sshd_config
+sed -i '/Port 22/a Port 666' /etc/ssh/sshd_config
+sed -i '/Port 22/a Port 200' /etc/ssh/sshd_config
+sed -i '/Port 22/a Port 22' /etc/ssh/sshd_config
+/etc/init.d/ssh restart
 
 echo "=== Install Dropbear ==="
 # install dropbear
@@ -247,25 +220,10 @@ apt -y install dropbear
 sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
 sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=143/g' /etc/default/dropbear
 sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 50000 -p 109 -p 110 -p 69"/g' /etc/default/dropbear
-# Ubuntu 22.04 / 24.04 ship /etc/default/dropbear with every line commented out,
-# so the sed replacements above never match there and dropbear stays on port 22
-# (which collides with OpenSSH). Append the same values explicitly instead:
-# the file is sourced as a shell script, so the last assignment wins and the
-# result is identical on 20.04, 22.04 and 24.04.
-if [ -f /etc/default/dropbear ]; then
-    grep -q "AUTO-SCRIPT DROPBEAR" /etc/default/dropbear || cat >> /etc/default/dropbear <<-END
-# --- AUTO-SCRIPT DROPBEAR ---
-NO_START=0
-DROPBEAR_PORT=143
-DROPBEAR_EXTRA_ARGS="-p 50000 -p 109 -p 110 -p 69"
-DROPBEAR_BANNER="/etc/issue.net"
-DROPBEAR_RECEIVE_WINDOW=65536
-END
-fi
 echo "/bin/false" >> /etc/shells
 echo "/usr/sbin/nologin" >> /etc/shells
-systemctl restart ssh 2>/dev/null || service ssh restart 2>/dev/null || true
-systemctl restart dropbear 2>/dev/null || service dropbear restart 2>/dev/null || true
+/etc/init.d/ssh restart
+/etc/init.d/dropbear restart
 
 cd
 # install stunnel
@@ -303,9 +261,9 @@ cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
 
 # konfigurasi stunnel4
 sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
-( /usr/lib/systemd/systemd-sysv-install enable stunnel4 2>/dev/null || /lib/systemd/systemd-sysv-install enable stunnel4 2>/dev/null || systemctl enable stunnel4 2>/dev/null || true )
+/lib/systemd/systemd-sysv-install enable stunnel4
 systemctl start stunnel4
-systemctl restart stunnel4 2>/dev/null || service stunnel4 restart 2>/dev/null || true
+/etc/init.d/stunnel4 restart
 
 
 # install fail2ban
@@ -477,28 +435,28 @@ cd
 chown -R www-data:www-data /home/vps/public_html
 sleep 0.5
 echo -e "$yell[SERVICE]$NC Restart All service SSH & OVPN"
-systemctl restart nginx 2>/dev/null || service nginx restart 2>/dev/null || true >/dev/null 2>&1
+/etc/init.d/nginx restart >/dev/null 2>&1
 sleep 0.5
 echo -e "[ ${green}ok${NC} ] Restarting nginx"
-systemctl restart openvpn 2>/dev/null || service openvpn restart 2>/dev/null || true >/dev/null 2>&1
+/etc/init.d/openvpn restart >/dev/null 2>&1
 sleep 0.5
 echo -e "[ ${green}ok${NC} ] Restarting cron "
-systemctl restart ssh 2>/dev/null || service ssh restart 2>/dev/null || true >/dev/null 2>&1
+/etc/init.d/ssh restart >/dev/null 2>&1
 sleep 0.5
 echo -e "[ ${green}ok${NC} ] Restarting ssh "
-systemctl restart dropbear 2>/dev/null || service dropbear restart 2>/dev/null || true >/dev/null 2>&1
+/etc/init.d/dropbear restart >/dev/null 2>&1
 sleep 0.5
 echo -e "[ ${green}ok${NC} ] Restarting dropbear "
-systemctl restart fail2ban 2>/dev/null || service fail2ban restart 2>/dev/null || true >/dev/null 2>&1
+/etc/init.d/fail2ban restart >/dev/null 2>&1
 sleep 0.5
 echo -e "[ ${green}ok${NC} ] Restarting fail2ban "
-systemctl restart stunnel4 2>/dev/null || service stunnel4 restart 2>/dev/null || true >/dev/null 2>&1
+/etc/init.d/stunnel4 restart >/dev/null 2>&1
 sleep 0.5
 echo -e "[ ${green}ok${NC} ] Restarting stunnel4 "
-systemctl restart vnstat 2>/dev/null || service vnstat restart 2>/dev/null || true >/dev/null 2>&1
+/etc/init.d/vnstat restart >/dev/null 2>&1
 sleep 0.5
 echo -e "[ ${green}ok${NC} ] Restarting vnstat "
-systemctl restart squid 2>/dev/null || service squid restart 2>/dev/null || true >/dev/null 2>&1
+/etc/init.d/squid restart >/dev/null 2>&1
 
 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 500
 screen -dmS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 500

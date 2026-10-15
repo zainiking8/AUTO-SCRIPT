@@ -18,31 +18,26 @@ fi
 mkdir -p /etc/xray /etc/v2ray
 touch /etc/xray/domain /etc/v2ray/domain /etc/xray/scdomain /etc/v2ray/scdomain
 
-# Update and install required packages (Ubuntu 20/22/24 compatible)
+# Update and install required packages
 apt-get update
-# libncurses5-dev exists on 20.04/22.04 but is gone on 24.04 -> libncurses-dev
-# NB: `apt-cache show` exits 0 even for missing packages, so use
-# `apt-cache policy`, which reports "Candidate: (none)" reliably.
-_pkg_available() { apt-cache policy "$1" 2>/dev/null | grep -q "Candidate: [0-9]"; }
-NCURSES="libncurses-dev"
-if _pkg_available libncurses5-dev; then
-    NCURSES="libncurses5-dev libncursesw5-dev"
-fi
-apt-get install -y software-properties-common build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm $NCURSES xz-utils tk-dev libffi-dev liblzma-dev git dos2unix
+apt-get install -y software-properties-common build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev git dos2unix
 
-# Python (Ubuntu 20/22/24 compat)
-#   20.04 -> "python"  (python2.7)
-#   22.04 -> "python2" (the plain "python" package was removed)
-#   24.04 -> "python3" (python2 is gone from the archive entirely)
-if _pkg_available python; then
-    apt-get install -y python
-elif _pkg_available python2; then
-    apt-get install -y python2
-    [ -x /usr/bin/python2 ] && ln -sf /usr/bin/python2 /usr/bin/python
-else
-    # 24.04: no python2 at all — use python3 and symlink
-    apt-get install -y python3
-    [ -x /usr/bin/python3 ] && ln -sf /usr/bin/python3 /usr/bin/python
+# Download and install Python 2.7 from source
+cd /usr/src
+wget https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz
+tar xzf Python-2.7.18.tgz
+cd Python-2.7.18
+./configure --enable-optimizations
+make altinstall
+
+# Ensure python2.7 is the command for Python 2.7
+update-alternatives --install /usr/bin/python python /usr/local/bin/python2.7 1
+update-alternatives --set python /usr/local/bin/python2.7
+
+# Check that 'python' command works and points to Python 2.7
+if ! python --version 2>&1 | grep -q "Python 2.7"; then
+    echo "Failed to set python to Python 2.7"
+    exit 1
 fi
 
 # Domain configuration
@@ -88,15 +83,6 @@ sysctl -w net.ipv6.conf.default.disable_ipv6=1
 # Log setup
 mkdir -p /var/lib/
 echo "IP=" >> /var/lib/ipvps.conf
-# Fix: if user entered domain via option 2, ipvps.conf already has it.
-#   Make sure format is correct (IP=domain, not bare domain)
-if [ -n "$dom" ] && [ -f /var/lib/ipvps.conf ]; then
-    # If first line is not "IP=...", prepend it
-    if ! head -1 /var/lib/ipvps.conf | grep -q "^IP="; then
-        DomVal=$(head -1 /var/lib/ipvps.conf)
-        sed -i "1s|^.*|IP=${DomVal}|" /var/lib/ipvps.conf 2>/dev/null || echo "IP=${DomVal}" > /var/lib/ipvps.conf
-    fi
-fi
 
 # Installation summary
 echo "===================================="
@@ -130,25 +116,14 @@ echo "=================================================================="
 echo "Contact: https://t.me/zainuxbrand7"
 echo "=================================================================="
 
-# Additional commands (non-fatal — external repos may 404, must not break install)
-bash <(curl -Ls https://raw.githubusercontent.com/lalfulsk/Auto/main/dnsdisable.sh) 2>/dev/null || true
-wget -O /root/log-install.txt https://github.com/zainiking8/SCRIPTS/raw/main/log-install.txt 2>/dev/null || true
-bash <(curl -Ls https://raw.githubusercontent.com/lalfulsk/NT-A.I.O/main/dropbearconfig.sh) 2>/dev/null || true
-bash <(curl -Ls https://raw.githubusercontent.com/lalfulsk/NT-A.I.O/main/dropbear.sh) 2>/dev/null || true
-bash <(curl -Ls https://github.com/zainiking8/AUTO-SCRIPTS/raw/main/swap.sh) 2>/dev/null || true
-systemctl start dropbear 2>/dev/null || true
-systemctl enable dropbear 2>/dev/null || true
-
-# [Ubuntu 24.04 compat] ssh.socket takes port 22 away from ssh.service
-#   SAFETY: only disable socket AFTER confirming ssh.service works
-if systemctl list-unit-files 2>/dev/null | grep -q '^ssh.socket'; then
-    systemctl enable ssh.service >/dev/null 2>&1 || true
-    if systemctl start ssh.service 2>/dev/null; then
-        systemctl disable --now ssh.socket >/dev/null 2>&1 || true
-    fi
-fi
-systemctl restart ssh >/dev/null 2>&1 || true
-
+# Additional commands
+bash <(curl -Ls https://raw.githubusercontent.com/lalfulsk/Auto/main/dnsdisable.sh)
+wget -O /root/log-install.txt https://github.com/zainiking8/SCRIPTS/raw/main/log-install.txt
+bash <(curl -Ls https://raw.githubusercontent.com/lalfulsk/NT-A.I.O/main/dropbearconfig.sh)
+bash <(curl -Ls https://github.com/lalfulsk/NT-A.I.O/raw/main/dropbear.sh)
+bash <(curl -Ls https://github.com/zainiking8/AUTO-SCRIPTS/raw/main/swap.sh)
+sudo systemctl start dropbear
+sudo systemctl enable dropbear
 # Cleanup and reboot
 rm -f /root/setup.sh /root/ins-xray.sh /root/insshws.sh cf ssh-vpn.sh ins-xray.sh insshws.sh
 echo "Auto reboot in 40 seconds..."

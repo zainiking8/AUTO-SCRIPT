@@ -37,10 +37,7 @@ apt install socat cron bash-completion ntpdate -y
 ntpdate pool.ntp.org
 apt -y install chrony
 apt install zip -y
-# "netcat" is a real package on 20.04/22.04 but is gone on 24.04, and a single
-# missing name makes apt refuse the whole line. netcat-openbsd exists on all
-# three releases and is what "netcat" pointed at anyway.
-apt install curl pwgen openssl netcat-openbsd cron -y
+apt install curl pwgen openssl netcat cron -y
 
 
 # install xray
